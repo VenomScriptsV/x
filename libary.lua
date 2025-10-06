@@ -5559,7 +5559,7 @@ function Library:CreateWindow(WindowInfo)
         })
 
         CurrentTabInfo = New("Frame", {
-            Size = UDim2.fromScale(WindowInfo.DisableSearch and 1 or 0.5, 1),
+            Size = UDim2.fromScale(WindowInfo.DisableSearch and 1 or 0.6, 1),
             Visible = false,
             BackgroundTransparency = 1,
             Parent = RightWrapper,
@@ -5605,7 +5605,7 @@ function Library:CreateWindow(WindowInfo)
         SearchBox = New("TextBox", {
             BackgroundColor3 = "MainColor",
             PlaceholderText = "Search",
-            Size = WindowInfo.SearchbarSize,
+            Size = UDim2.fromScale(0.35, 1),
             TextScaled = true,
             Visible = not (WindowInfo.DisableSearch or false),
             Parent = RightWrapper,
@@ -5814,6 +5814,20 @@ function Library:CreateWindow(WindowInfo)
                 TextTransparency = 1,
                 TextXAlignment = Enum.TextXAlignment.Left,
                 Parent = TabButton,
+            })
+
+            -- Active indicator
+            local ActiveIndicator = New("Frame", {
+                BackgroundColor3 = "AccentColor",
+                BorderSizePixel = 0,
+                Position = UDim2.fromOffset(2, 8),
+                Size = UDim2.fromOffset(3, 24),
+                Visible = false,
+                Parent = TabButton,
+            })
+            New("UICorner", {
+                CornerRadius = UDim.new(0, 2),
+                Parent = ActiveIndicator,
             })
 
             if Icon then
@@ -6367,12 +6381,17 @@ function Library:CreateWindow(WindowInfo)
                     ImageTransparency = 0,
                 }):Play()
             end
+            
+            -- Show active indicator
+            if ActiveIndicator then
+                ActiveIndicator.Visible = true
+            end
 
             if Description then
                 CurrentTabInfo.Visible = true
                 
                 if IsDefaultSearchbarSize then
-                    SearchBox.Size = UDim2.fromScale(0.5, 1)
+                    SearchBox.Size = UDim2.fromScale(0.35, 1)
                 end
 
                 CurrentTabLabel.Text = Name
@@ -6400,6 +6419,12 @@ function Library:CreateWindow(WindowInfo)
                     ImageTransparency = 0.5,
                 }):Play()
             end
+            
+            -- Hide active indicator
+            if ActiveIndicator then
+                ActiveIndicator.Visible = false
+            end
+            
             TabContainer.Visible = false
 
             if IsDefaultSearchbarSize then
@@ -6461,6 +6486,20 @@ function Library:CreateWindow(WindowInfo)
                 TextTransparency = 1,
                 TextXAlignment = Enum.TextXAlignment.Left,
                 Parent = TabButton,
+            })
+
+            -- Active indicator
+            local ActiveIndicator = New("Frame", {
+                BackgroundColor3 = "AccentColor",
+                BorderSizePixel = 0,
+                Position = UDim2.fromOffset(2, 8),
+                Size = UDim2.fromOffset(3, 24),
+                Visible = false,
+                Parent = TabButton,
+            })
+            New("UICorner", {
+                CornerRadius = UDim.new(0, 2),
+                Parent = ActiveIndicator,
             })
 
             if KeyIcon then
@@ -6595,6 +6634,12 @@ function Library:CreateWindow(WindowInfo)
                     ImageTransparency = 0,
                 }):Play()
             end
+            
+            -- Show active indicator
+            if ActiveIndicator then
+                ActiveIndicator.Visible = true
+            end
+            
             TabContainer.Visible = true
 
             Library.ActiveTab = Tab
@@ -6612,6 +6657,12 @@ function Library:CreateWindow(WindowInfo)
                     ImageTransparency = 0.5,
                 }):Play()
             end
+            
+            -- Hide active indicator
+            if ActiveIndicator then
+                ActiveIndicator.Visible = false
+            end
+            
             TabContainer.Visible = false
 
             Library.ActiveTab = nil
