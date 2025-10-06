@@ -5503,7 +5503,7 @@ function Library:CreateWindow(WindowInfo)
                 },
                 {
                     Position = UDim2.fromOffset(50, 0),
-                    Size = UDim2.new(0, 1, 1, -21),
+                    Size = UDim2.new(0, 1, 1, 0), -- Extend line to full height
                 },
                 {
                     AnchorPoint = Vector2.new(0, 1),
@@ -5560,6 +5560,20 @@ function Library:CreateWindow(WindowInfo)
             })
         end
 
+        -- Add window title text
+        local TitleLabel = New("TextLabel", {
+            BackgroundTransparency = 1,
+            Position = UDim2.new(0, WindowInfo.Icon and 45 or 12, 0.5, 0),
+            AnchorPoint = Vector2.new(0, 0.5),
+            Size = UDim2.new(0, 200, 0, 20),
+            Text = WindowInfo.Title,
+            TextSize = 14,
+            TextXAlignment = Enum.TextXAlignment.Left,
+            TextYAlignment = Enum.TextYAlignment.Center,
+            Font = Enum.Font.GothamSemibold,
+            Parent = TopBar,
+        })
+
         --// Top Right Bar
         local RightWrapper = New("Frame", {
             BackgroundTransparency = 1,
@@ -5582,7 +5596,7 @@ function Library:CreateWindow(WindowInfo)
             Size = UDim2.new(0, 300, 1, -8), -- Fixed width, full height minus padding
             Visible = false,
             BackgroundTransparency = 1,
-            Parent = Header, -- Attach directly to header
+            Parent = TopBar, -- Attach directly to TopBar
         })
 
         New("UIListLayout", {
