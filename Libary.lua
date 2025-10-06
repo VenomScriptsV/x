@@ -5578,46 +5578,58 @@ function Library:CreateWindow(WindowInfo)
         })
 
         CurrentTabInfo = New("Frame", {
-            Size = UDim2.fromScale(WindowInfo.DisableSearch and 1 or 0.5, 1),
+            Position = UDim2.fromOffset(60, 4), -- Position to the right of close icon
+            Size = UDim2.new(0, 300, 1, -8), -- Fixed width, full height minus padding
             Visible = false,
             BackgroundTransparency = 1,
-            Parent = RightWrapper,
+            Parent = Header, -- Attach directly to header
         })
 
         New("UIListLayout", {
-            FillDirection = Enum.FillDirection.Vertical,
+            FillDirection = Enum.FillDirection.Vertical, -- VERTICAL layout (title on top, description underneath)
             HorizontalAlignment = Enum.HorizontalAlignment.Left,
             VerticalAlignment = Enum.VerticalAlignment.Center,
+            Padding = UDim.new(0, 2), -- Small space between title and description
             Parent = CurrentTabInfo,
         })
 
-        New("UIPadding", {
-            PaddingBottom = UDim.new(0, 8),
-            PaddingLeft = UDim.new(0, 8),
-            PaddingRight = UDim.new(0, 8),
-            PaddingTop = UDim.new(0, 8),
-            Parent = CurrentTabInfo,
-        })
 
         CurrentTabLabel = New("TextLabel", {
             BackgroundTransparency = 1,
-            Size = UDim2.fromScale(1, 0),
-            AutomaticSize = Enum.AutomaticSize.Y,
+            Size = UDim2.new(1, 0, 0, 16), -- Full width, fixed height for title
             Text = "",
             TextSize = 14,
             TextXAlignment = Enum.TextXAlignment.Left,
+            TextYAlignment = Enum.TextYAlignment.Center,
+            Font = Enum.Font.GothamSemibold, -- Bold for title
             Parent = CurrentTabInfo,
         })
 
         CurrentTabDescription = New("TextLabel", {
             BackgroundTransparency = 1,
-            Size = UDim2.fromScale(1, 0),
-            AutomaticSize = Enum.AutomaticSize.Y,
+            Size = UDim2.new(1, 0, 0, 14), -- Full width, smaller height for description
             Text = "",
-            TextWrapped = true,
-            TextSize = 14,
+            TextWrapped = true, -- Allow wrapping for longer descriptions
+            TextSize = 11,
             TextXAlignment = Enum.TextXAlignment.Left,
-            TextTransparency = 0.5,
+            TextYAlignment = Enum.TextYAlignment.Top,
+            TextTransparency = 0.4,
+            Font = Enum.Font.Gotham, -- Regular font for description
+            Parent = CurrentTabInfo,
+        })
+        
+        -- Verify CurrentTabDescription was created
+        if not CurrentTabDescription then
+            print("ERROR: Failed to create CurrentTabDescription!")
+        else
+            print("✓ CurrentTabDescription created successfully")
+        end
+        
+        New("UIPadding", {
+            PaddingLeft = UDim.new(0, 12),
+            PaddingRight = UDim.new(0, 12),
+            PaddingTop = UDim.new(0, 8),
+            PaddingBottom = UDim.new(0, 8),
             Parent = CurrentTabInfo,
         })
 
@@ -5822,19 +5834,11 @@ function Library:CreateWindow(WindowInfo)
                 PaddingTop = UDim.new(0, 8),
                 Parent = TabButton,
             })
-
-            -- Add active indicator (left border) - make it more visible
-            local ActiveIndicator = New("Frame", {
-                BackgroundColor3 = "AccentColor",
-                Position = UDim2.fromOffset(0, 5),
-                Size = UDim2.new(0, 4, 1, -10),
-                Visible = false,
-                ZIndex = 15,
-                Parent = TabButton,
-            })
+            
+            -- Add corner radius for modern highlighted box look
             New("UICorner", {
-                CornerRadius = UDim.new(0, 2),
-                Parent = ActiveIndicator,
+                CornerRadius = UDim.new(0, 6),
+                Parent = TabButton,
             })
 
             if Icon then
@@ -5983,6 +5987,10 @@ function Library:CreateWindow(WindowInfo)
 
         --// Tab Table \\--
         local Tab = {
+            Name = Name,
+            Description = Description,
+            Button = TabButton, -- Store button reference for highlighting
+            Icon = TabIcon, -- Store icon reference for highlighting
             Groupboxes = {},
             Tabboxes = {},
             DependencyGroupboxes = {},
@@ -6132,20 +6140,21 @@ function Library:CreateWindow(WindowInfo)
                     })
                 end
 
-                -- Add collapse button with arrow - ALWAYS CREATE
+                -- Collapse button with clean invisible background
                 local CollapseButton = New("TextButton", {
                     Active = true,
                     AnchorPoint = Vector2.new(1, 0.5),
-                    BackgroundColor3 = "MainColor",
-                    BackgroundTransparency = 0.8,
+                    BackgroundTransparency = 1, -- Fully transparent background
                     BorderSizePixel = 0,
-                    Position = UDim2.new(1, -6, 0, 17),
-                    Size = UDim2.fromOffset(28, 28),
+                    Position = UDim2.new(1, -8, 0, 17),
+                    Size = UDim2.fromOffset(32, 32),
                     Text = "",
                     TextTransparency = 1,
                     ZIndex = 100,
                     Parent = GroupboxHolder,
                 })
+                
+                -- No hover effects - keep it clean
                 
                 local CollapseArrow
                 -- Try to use ArrowIcon first, then fallback to text
@@ -6217,8 +6226,75 @@ function Library:CreateWindow(WindowInfo)
                     PaddingTop = UDim.new(0, 4),
                     Parent = GroupboxContainer,
                 })
+                
+                -- Connect the collapse button PROPERLY (inside the do block)
+                if CollapseButton then
+                    -- Store references that we'll need
+                    local groupboxContainer = GroupboxContainer
+                    local groupboxList = GroupboxList
+                    local background = Background
+                    local collapseArrow = CollapseArrow
+                    local collapsed = false
+                    
+                    CollapseButton.MouseButton1Click:Connect(function()
+                        print("\n>>> COLLAPSE BUTTON CLICKED for:", Info.Name, "<<<")
+                        
+                        collapsed = not collapsed
+                        print("Toggling to:", collapsed and "COLLAPSED" or "EXPANDED")
+                        
+                        if collapsed then
+                            print("COLLAPSING...")
+                            -- Hide all elements except the header
+                            for _, child in ipairs(groupboxContainer:GetChildren()) do
+                                if child:IsA("GuiObject") then
+                                    child.Visible = false
+                                end
+                            end
+                            
+                            -- Resize background to just show header - INSTANT
+                            background.Size = UDim2.new(1, 0, 0, 40)
+                            
+                            -- Update arrow direction
+                            if collapseArrow then
+                                if collapseArrow.ClassName == "ImageLabel" then
+                                    collapseArrow.Rotation = 180
+                                else
+                                    collapseArrow.Text = "▼"
+                                end
+                            end
+                            print("Collapsed successfully")
+                        else
+                            print("EXPANDING...")
+                            -- Show all elements
+                            for _, child in ipairs(groupboxContainer:GetChildren()) do
+                                if child:IsA("GuiObject") then
+                                    child.Visible = true
+                                end
+                            end
+                            
+                            -- Resize INSTANTLY - no wait
+                            local contentHeight = groupboxList.AbsoluteContentSize.Y + 20
+                            background.Size = UDim2.new(1, 0, 0, contentHeight + 40)
+                            
+                            -- Update arrow direction
+                            if collapseArrow then
+                                if collapseArrow.ClassName == "ImageLabel" then
+                                    collapseArrow.Rotation = 0
+                                else
+                                    collapseArrow.Text = "▲"
+                                end
+                            end
+                            print("Expanded successfully, height:", contentHeight + 40)
+                        end
+                    end)
+                    print("✓ Collapse button connected for:", Info.Name)
+                else
+                    print("!!! CollapseButton is nil for:", Info.Name)
+                end
+                
             end
 
+            -- Create Groupbox table AFTER the do block
             local Groupbox = {
                 BoxHolder = BoxHolder,
                 Holder = Background,
@@ -6230,44 +6306,8 @@ function Library:CreateWindow(WindowInfo)
                 Elements = {},
             }
 
-            -- Store collapse state in groupbox
+            -- SIMPLE COLLAPSE SYSTEM THAT WORKS
             Groupbox.Collapsed = false
-            
-            -- Simple collapse functionality that ACTUALLY WORKS
-            if CollapseButton and CollapseArrow then
-                print("Setting up collapse for:", Info.Name)
-                
-                -- Simple click handler
-                CollapseButton.MouseButton1Click:Connect(function()
-                    print("COLLAPSE BUTTON CLICKED:", Info.Name)
-                    
-                    -- Toggle state
-                    Groupbox.Collapsed = not Groupbox.Collapsed
-                    
-                    -- Hide/show content
-                    GroupboxContainer.Visible = not Groupbox.Collapsed
-                    
-                    -- Rotate arrow
-                    if CollapseArrow.ClassName == "ImageLabel" then
-                        CollapseArrow.Rotation = Groupbox.Collapsed and 180 or 0
-                    else
-                        CollapseArrow.Text = Groupbox.Collapsed and "▼" or "▲"
-                    end
-                    
-                    -- Resize
-                    if Groupbox.Collapsed then
-                        Background.Size = UDim2.new(1, 0, 0, 35)
-                    else
-                        Background.Size = UDim2.new(1, 0, 0, GroupboxList.AbsoluteContentSize.Y + 53)
-                    end
-                    
-                    print("Section", Info.Name, "is now", Groupbox.Collapsed and "COLLAPSED" or "EXPANDED")
-                end)
-                
-                print("Successfully connected collapse for:", Info.Name)
-            else
-                print("No collapse button for:", Info.Name)
-            end
 
             function Groupbox:Resize()
                 if Groupbox.Collapsed then
@@ -6466,36 +6506,57 @@ function Library:CreateWindow(WindowInfo)
         end
 
         function Tab:Show()
-            if Library.ActiveTab then
+            -- STEP 1: Hide the previous active tab completely
+            if Library.ActiveTab and Library.ActiveTab ~= Tab then
                 Library.ActiveTab:Hide()
             end
 
+            -- STEP 2: FORCE HIDE ALL OTHER TAB HIGHLIGHTS
+            for _, otherTab in pairs(Library.Tabs) do
+                if otherTab ~= Tab then
+                    -- Hide other tab highlights
+                    if otherTab.Button then
+                        otherTab.Button.BackgroundTransparency = 1
+                    end
+                    if otherTab.Icon then
+                        otherTab.Icon.ImageTransparency = 0.5
+                    end
+                end
+            end
+
+            -- STEP 3: SHOW THIS TAB'S HIGHLIGHT ONLY
+            -- Highlight THIS tab's button
             TweenService:Create(TabButton, Library.TweenInfo, {
-                BackgroundTransparency = 0,
+                BackgroundTransparency = 0.95, -- Very subtle highlight
+                BackgroundColor3 = Library.Scheme.AccentColor,
             }):Play()
+            
+            -- Make THIS tab's icon fully visible
             if TabIcon then
                 TweenService:Create(TabIcon, Library.TweenInfo, {
                     ImageTransparency = 0,
                 }):Play()
             end
 
-            -- Show active indicator
-            if ActiveIndicator then
-                ActiveIndicator.Visible = true
-                print("=== ACTIVE INDICATOR SHOWN ===")
-                print("Tab:", Name)
-                print("Indicator Size:", ActiveIndicator.Size)
-                print("Indicator Position:", ActiveIndicator.Position)
-                print("Indicator Color:", ActiveIndicator.BackgroundColor3)
-                print("==============================")
+            -- Show tab description if available
+            if Tab.Description and CurrentTabDescription and CurrentTabLabel then
+                CurrentTabInfo.Visible = true
+                CurrentTabLabel.Text = Name -- Title on top
+                CurrentTabDescription.Text = Tab.Description -- Description underneath
+                print("*** TAB DESCRIPTION SET FOR", Name, ":", Tab.Description)
+            elseif Tab.Description then
+                print("WARNING: Tab", Name, "has description but CurrentTabDescription/Label is nil")
+                print("CurrentTabDescription:", CurrentTabDescription ~= nil)
+                print("CurrentTabLabel:", CurrentTabLabel ~= nil)
+            else
+                CurrentTabInfo.Visible = false
             end
-
-            -- No descriptions shown, keep it clean
-            CurrentTabInfo.Visible = false
 
             TabContainer.Visible = true
 
+            -- Set this tab as the active tab AFTER everything is set up
             Library.ActiveTab = Tab
+            print("Set active tab to:", Name)
 
             if Library.Searching then
                 Library:UpdateSearch(Library.SearchText)
@@ -6503,21 +6564,19 @@ function Library:CreateWindow(WindowInfo)
         end
 
         function Tab:Hide()
+            -- Remove highlight from this tab
             TweenService:Create(TabButton, Library.TweenInfo, {
                 BackgroundTransparency = 1,
             }):Play()
+            
+            -- Make icon semi-transparent
             if TabIcon then
                 TweenService:Create(TabIcon, Library.TweenInfo, {
                     ImageTransparency = 0.5,
                 }):Play()
             end
 
-            -- Hide active indicator
-            if ActiveIndicator then
-                ActiveIndicator.Visible = false
-                print("Hiding active indicator for:", Name or "Unknown")
-            end
-
+            -- Hide the tab container
             TabContainer.Visible = false
 
             if IsDefaultSearchbarSize then
@@ -6525,8 +6584,6 @@ function Library:CreateWindow(WindowInfo)
             end
             
             CurrentTabInfo.Visible = false
-
-            Library.ActiveTab = nil
         end
 
         --// Execution \\--
@@ -6548,75 +6605,82 @@ function Library:CreateWindow(WindowInfo)
     end
 
     function Window:AddTabDescription(TabName, Title, Description)
+        print("Adding description to tab:", TabName)
+        
         local Tab = Library.Tabs[TabName]
         if not Tab then
-            print("Tab not found:", TabName)
+            print("ERROR: Tab not found:", TabName)
             return
         end
         
-        -- Find the tab's container
-        local TabContainer = Tab.Container or Tab.TabContainer
+        -- Find the main container - try multiple possible names
+        local TabContainer = Tab.Container or Tab.TabContainer or Tab.Frame
         if not TabContainer then
-            print("Container not found for tab:", TabName)
+            print("ERROR: No container found for tab:", TabName)
             return
         end
         
-        -- Create description area at the top
-        local DescriptionFrame = New("Frame", {
+        print("Found container for", TabName, ":", TabContainer.Name)
+        
+        -- Create description box at the top
+        local DescFrame = New("Frame", {
             BackgroundColor3 = "MainColor",
             BorderColor3 = "OutlineColor",
             BorderSizePixel = 1,
-            Position = UDim2.fromOffset(6, 6),
-            Size = UDim2.new(1, -12, 0, 60),
+            Position = UDim2.fromOffset(8, 8),
+            Size = UDim2.new(1, -16, 0, 65),
+            ZIndex = 10,
             Parent = TabContainer,
         })
         
         New("UICorner", {
-            CornerRadius = UDim.new(0, 4),
-            Parent = DescriptionFrame,
+            CornerRadius = UDim.new(0, 6),
+            Parent = DescFrame,
         })
         
         -- Title
-        local TitleLabel = New("TextLabel", {
+        New("TextLabel", {
             BackgroundTransparency = 1,
-            Position = UDim2.fromOffset(8, 4),
-            Size = UDim2.new(1, -16, 0, 20),
+            Position = UDim2.fromOffset(12, 6),
+            Size = UDim2.new(1, -24, 0, 22),
             Text = Title,
             TextColor3 = "AccentColor",
-            TextSize = 16,
+            TextSize = 18,
             TextXAlignment = Enum.TextXAlignment.Left,
-            Parent = DescriptionFrame,
+            Parent = DescFrame,
         })
         
-        -- Description
-        local DescLabel = New("TextLabel", {
+        -- Description text
+        New("TextLabel", {
             BackgroundTransparency = 1,
-            Position = UDim2.fromOffset(8, 24),
-            Size = UDim2.new(1, -16, 0, 32),
+            Position = UDim2.fromOffset(12, 28),
+            Size = UDim2.new(1, -24, 0, 30),
             Text = Description,
             TextSize = 14,
             TextTransparency = 0.3,
             TextWrapped = true,
             TextXAlignment = Enum.TextXAlignment.Left,
             TextYAlignment = Enum.TextYAlignment.Top,
-            Parent = DescriptionFrame,
+            Parent = DescFrame,
         })
         
-        -- Adjust other content to be below description
+        -- Move all other content down
+        task.wait(0.1) -- Let UI settle
         for _, child in pairs(TabContainer:GetChildren()) do
-            if child ~= DescriptionFrame and child.ClassName == "ScrollingFrame" then
-                child.Position = UDim2.fromOffset(0, 72)
-                child.Size = UDim2.new(1, 0, 1, -72)
+            if child ~= DescFrame and (child.ClassName == "ScrollingFrame" or child.ClassName == "Frame") then
+                print("Moving child:", child.Name, "down by 75px")
+                local currentPos = child.Position
+                child.Position = UDim2.new(currentPos.X.Scale, currentPos.X.Offset, currentPos.Y.Scale, currentPos.Y.Offset + 75)
+                
+                local currentSize = child.Size
+                child.Size = UDim2.new(currentSize.X.Scale, currentSize.X.Offset, currentSize.Y.Scale, currentSize.Y.Offset - 75)
             end
         end
         
-        print("Added description to tab:", TabName)
+        print("Successfully added description to:", TabName)
     end
-        local TabButton: TextButton
-        local TabLabel
-        local TabIcon
 
-        local TabContainer
+    function Window:AddKeyTab(Name)
 
         do
             TabButton = New("TextButton", {
