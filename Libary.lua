@@ -5620,9 +5620,7 @@ function Library:CreateWindow(WindowInfo)
         
         -- Verify CurrentTabDescription was created
         if not CurrentTabDescription then
-            print("ERROR: Failed to create CurrentTabDescription!")
         else
-            print("✓ CurrentTabDescription created successfully")
         end
         
         New("UIPadding", {
@@ -6173,7 +6171,6 @@ function Library:CreateWindow(WindowInfo)
                         ZIndex = 101,
                         Parent = CollapseButton,
                     })
-                    print("Created arrow with icon for:", Info.Name)
                 else
                     -- Fallback: create a simple text arrow
                     CollapseArrow = New("TextLabel", {
@@ -6188,10 +6185,8 @@ function Library:CreateWindow(WindowInfo)
                         ZIndex = 101,
                         Parent = CollapseButton,
                     })
-                    print("Created arrow with text for:", Info.Name)
                 end
                 
-                print("Collapse button created successfully for:", Info.Name)
 
                 GroupboxLabel = New("TextLabel", {
                     BackgroundTransparency = 1,
@@ -6237,13 +6232,10 @@ function Library:CreateWindow(WindowInfo)
                     local collapsed = false
                     
                     CollapseButton.MouseButton1Click:Connect(function()
-                        print("\n>>> COLLAPSE BUTTON CLICKED for:", Info.Name, "<<<")
                         
                         collapsed = not collapsed
-                        print("Toggling to:", collapsed and "COLLAPSED" or "EXPANDED")
                         
                         if collapsed then
-                            print("COLLAPSING...")
                             -- Hide all elements except the header
                             for _, child in ipairs(groupboxContainer:GetChildren()) do
                                 if child:IsA("GuiObject") then
@@ -6262,9 +6254,7 @@ function Library:CreateWindow(WindowInfo)
                                     collapseArrow.Text = "▼"
                                 end
                             end
-                            print("Collapsed successfully")
                         else
-                            print("EXPANDING...")
                             -- Show all elements
                             for _, child in ipairs(groupboxContainer:GetChildren()) do
                                 if child:IsA("GuiObject") then
@@ -6284,12 +6274,9 @@ function Library:CreateWindow(WindowInfo)
                                     collapseArrow.Text = "▲"
                                 end
                             end
-                            print("Expanded successfully, height:", contentHeight + 40)
                         end
                     end)
-                    print("✓ Collapse button connected for:", Info.Name)
                 else
-                    print("!!! CollapseButton is nil for:", Info.Name)
                 end
                 
             end
@@ -6543,11 +6530,7 @@ function Library:CreateWindow(WindowInfo)
                 CurrentTabInfo.Visible = true
                 CurrentTabLabel.Text = Name -- Title on top
                 CurrentTabDescription.Text = Tab.Description -- Description underneath
-                print("*** TAB DESCRIPTION SET FOR", Name, ":", Tab.Description)
             elseif Tab.Description then
-                print("WARNING: Tab", Name, "has description but CurrentTabDescription/Label is nil")
-                print("CurrentTabDescription:", CurrentTabDescription ~= nil)
-                print("CurrentTabLabel:", CurrentTabLabel ~= nil)
             else
                 CurrentTabInfo.Visible = false
             end
@@ -6556,7 +6539,6 @@ function Library:CreateWindow(WindowInfo)
 
             -- Set this tab as the active tab AFTER everything is set up
             Library.ActiveTab = Tab
-            print("Set active tab to:", Name)
 
             if Library.Searching then
                 Library:UpdateSearch(Library.SearchText)
@@ -6605,22 +6587,18 @@ function Library:CreateWindow(WindowInfo)
     end
 
     function Window:AddTabDescription(TabName, Title, Description)
-        print("Adding description to tab:", TabName)
         
         local Tab = Library.Tabs[TabName]
         if not Tab then
-            print("ERROR: Tab not found:", TabName)
             return
         end
         
         -- Find the main container - try multiple possible names
         local TabContainer = Tab.Container or Tab.TabContainer or Tab.Frame
         if not TabContainer then
-            print("ERROR: No container found for tab:", TabName)
             return
         end
         
-        print("Found container for", TabName, ":", TabContainer.Name)
         
         -- Create description box at the top
         local DescFrame = New("Frame", {
@@ -6668,7 +6646,6 @@ function Library:CreateWindow(WindowInfo)
         task.wait(0.1) -- Let UI settle
         for _, child in pairs(TabContainer:GetChildren()) do
             if child ~= DescFrame and (child.ClassName == "ScrollingFrame" or child.ClassName == "Frame") then
-                print("Moving child:", child.Name, "down by 75px")
                 local currentPos = child.Position
                 child.Position = UDim2.new(currentPos.X.Scale, currentPos.X.Offset, currentPos.Y.Scale, currentPos.Y.Offset + 75)
                 
@@ -6676,8 +6653,6 @@ function Library:CreateWindow(WindowInfo)
                 child.Size = UDim2.new(currentSize.X.Scale, currentSize.X.Offset, currentSize.Y.Scale, currentSize.Y.Offset - 75)
             end
         end
-        
-        print("Successfully added description to:", TabName)
     end
 
     function Window:AddKeyTab(Name)
