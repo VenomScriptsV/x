@@ -45,7 +45,7 @@ do
         ["Default"] = {
             1,
             httpService:JSONDecode(
-                [[{"FontColor":"ffffff","MainColor":"191919","AccentColor":"7d55ff","BackgroundColor":"0f0f0f","OutlineColor":"282828"}]]
+                [[{"FontColor":"ffffff","MainColor":"#161616","AccentColor":"#7d55ff","BackgroundColor":"#0a0a0a","OutlineColor":"#1e1e1e"}]]
             ),
         },
         ["BBot"] = {
@@ -527,4 +527,5 @@ do
 end
 
 getgenv().ObsidianThemeManager = ThemeManager
+
 return ThemeManager
