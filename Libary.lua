@@ -949,10 +949,23 @@ function IsValidCustomIcon(Icon: string)
     return typeof(Icon) == "string" and (Icon:match("rbxasset") or Icon:match("roblox%.com/asset/%?id=") or Icon:match("rbxthumb://type="))
 end
 
+type Icon = {
+    Url: string,
+    Id: number,
+    IconName: string,
+    ImageRectOffset: Vector2,
+    ImageRectSize: Vector2,
+}
+
+type IconModule = {
+    Icons: { string },
+    GetAsset: (Name: string) -> Icon?,
+}
+
 local FetchIcons, Icons = pcall(function()
-    return loadstring(
+    return (loadstring(
         game:HttpGet("https://raw.githubusercontent.com/deividcomsono/lucide-roblox-direct/refs/heads/main/source.lua")
-    )()
+    ) :: () -> IconModule)()
 end)
 function Library:GetIcon(IconName: string)
     if not FetchIcons then
@@ -1831,6 +1844,18 @@ local CheckIcon = Library:GetIcon("check")
 local ArrowIcon = Library:GetIcon("chevron-up")
 local ResizeIcon = Library:GetIcon("move-diagonal-2")
 local KeyIcon = Library:GetIcon("key")
+local MoveIcon = Library:GetIcon("move")
+
+function Library:SetIconModule(module: IconModule)
+    FetchIcons = true
+    Icons = module
+
+    CheckIcon = Library:GetIcon("check")
+    ArrowIcon = Library:GetIcon("chevron-up")
+    ResizeIcon = Library:GetIcon("move-diagonal-2")
+    KeyIcon = Library:GetIcon("key")
+    MoveIcon = Library:GetIcon("move")
+end
 
 local BaseAddons = {}
 do
@@ -5451,6 +5476,12 @@ function Library:CreateWindow(WindowInfo)
     local ResizeButton
     local Tabs
     local Container
+    
+    local LayoutRefs = {
+        TabPadding = {},
+        TabLabels = {},
+    }
+    
     do
         Library.KeybindFrame, Library.KeybindContainer = Library:AddDraggableMenu("Keybinds")
         Library.KeybindFrame.AnchorPoint = Vector2.new(0, 0.5)
@@ -5560,17 +5591,18 @@ function Library:CreateWindow(WindowInfo)
             })
         end
 
-        -- Add window title text
+        -- Add window title text (hidden by default)
         local TitleLabel = New("TextLabel", {
             BackgroundTransparency = 1,
             Position = UDim2.new(0, WindowInfo.Icon and 45 or 12, 0.5, 0),
             AnchorPoint = Vector2.new(0, 0.5),
             Size = UDim2.new(0, 200, 0, 20),
-            Text = WindowInfo.Title,
+            Text = "",
             TextSize = 14,
             TextXAlignment = Enum.TextXAlignment.Left,
             TextYAlignment = Enum.TextYAlignment.Center,
             Font = Enum.Font.GothamSemibold,
+            Visible = false,
             Parent = TopBar,
         })
 
@@ -5610,25 +5642,25 @@ function Library:CreateWindow(WindowInfo)
 
         CurrentTabLabel = New("TextLabel", {
             BackgroundTransparency = 1,
-            Size = UDim2.new(1, 0, 0, 16), -- Full width, fixed height for title
+            Size = UDim2.new(1, 0, 0, 18),
             Text = "",
-            TextSize = 14,
+            TextSize = 16,
             TextXAlignment = Enum.TextXAlignment.Left,
             TextYAlignment = Enum.TextYAlignment.Center,
-            Font = Enum.Font.GothamSemibold, -- Bold for title
+            Font = Enum.Font.GothamBold,
             Parent = CurrentTabInfo,
         })
 
         CurrentTabDescription = New("TextLabel", {
             BackgroundTransparency = 1,
-            Size = UDim2.new(1, 0, 0, 14), -- Full width, smaller height for description
+            Size = UDim2.new(1, 0, 0, 14),
             Text = "",
-            TextWrapped = true, -- Allow wrapping for longer descriptions
-            TextSize = 11,
+            TextWrapped = true,
+            TextSize = 12,
             TextXAlignment = Enum.TextXAlignment.Left,
             TextYAlignment = Enum.TextYAlignment.Top,
-            TextTransparency = 0.4,
-            Font = Enum.Font.Gotham, -- Regular font for description
+            TextTransparency = 0.35,
+            Font = Enum.Font.Gotham,
             Parent = CurrentTabInfo,
         })
         
@@ -5683,7 +5715,6 @@ function Library:CreateWindow(WindowInfo)
             })
         end
 
-        local MoveIcon = Library:GetIcon("move")
         if MoveIcon then
             New("ImageLabel", {
                 AnchorPoint = Vector2.new(1, 0.5),
@@ -5847,11 +5878,23 @@ function Library:CreateWindow(WindowInfo)
                 Parent = TabButton,
             })
             
-            -- Add corner radius for modern highlighted box look
             New("UICorner", {
                 CornerRadius = UDim.new(0, 6),
                 Parent = TabButton,
             })
+            
+            TabLabel = New("TextLabel", {
+                BackgroundTransparency = 1,
+                Position = UDim2.fromOffset(30, 0),
+                Size = UDim2.new(1, -30, 1, 0),
+                Text = "",
+                TextSize = 16,
+                TextTransparency = 0.5,
+                TextXAlignment = Enum.TextXAlignment.Left,
+                Visible = false,
+                Parent = TabButton,
+            })
+            table.insert(LayoutRefs.TabLabels, TabLabel)
 
             if Icon then
                 TabIcon = New("ImageLabel", {
@@ -6691,12 +6734,14 @@ function Library:CreateWindow(WindowInfo)
                 BackgroundTransparency = 1,
                 Position = UDim2.fromOffset(30, 0),
                 Size = UDim2.new(1, -30, 1, 0),
-                Text = Name,
+                Text = "",
                 TextSize = 16,
                 TextTransparency = 0.5,
                 TextXAlignment = Enum.TextXAlignment.Left,
+                Visible = false,
                 Parent = TabButton,
             })
+            table.insert(LayoutRefs.TabLabels, TabLabel)
 
             if KeyIcon then
                 TabIcon = New("ImageLabel", {
